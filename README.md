@@ -110,6 +110,9 @@ yaptpy --ip 192.168.1.100 --port 4444 --base32
 
 # RLE encoding
 yaptpy --ip 192.168.1.100 --port 4444 --rle
+
+# LZ77 compression
+yaptpy --ip 192.168.1.100 --port 4444 --lz77
 ```
 
 ### Obfuscation
@@ -198,6 +201,15 @@ Encrypts data using AES-CBC.
 
 #### `rc4_encrypt(data: bytes, key: bytes) -> bytes`
 Encrypts data using RC4 stream cipher.
+
+#### `lz77_encode(data: bytes, window_size: int, min_match: int, max_match: int) -> bytes`
+Encodes data using LZ77 compression.
+
+#### `lz77_decode(data: bytes) -> bytes`
+Decodes LZ77 compressed data.
+
+#### `lz77_decoder_stub(original_size: int) -> bytes`
+Generates LZ77 decompression stub.
 
 ### Evasion Functions
 

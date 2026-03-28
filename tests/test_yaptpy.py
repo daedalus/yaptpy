@@ -21,6 +21,9 @@ from yaptpy import (
     generate_sleep_evasion,
     generate_staged_payload,
     generate_vm_detection,
+    lz77_decode,
+    lz77_decoder_stub,
+    lz77_encode,
     rc4_encrypt,
     remove_comments_from_assembly,
     rle_decoder_stub,
@@ -774,3 +777,48 @@ class TestArm64Payload:
                 port=None,
                 payload_type="reverse",
             )
+
+
+class TestLz77Encode:
+    def test_lz77_encode_basic(self):
+        data = b"aaabbbcccdddeee"
+        result = lz77_encode(data)
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+    def test_lz77_encode_repeated_data(self):
+        data = b"abcabcabcabcabc"
+        result = lz77_encode(data)
+        assert isinstance(result, bytes)
+
+    def test_lz77_encode_no_compression(self):
+        data = b"abcdefghijklmnop"
+        result = lz77_encode(data)
+        assert isinstance(result, bytes)
+
+    def test_lz77_encode_empty(self):
+        result = lz77_encode(b"")
+        assert result == b""
+
+    def test_lz77_decode_basic(self):
+        data = b"aaabbbcccdddeee"
+        encoded = lz77_encode(data)
+        decoded = lz77_decode(encoded)
+        assert decoded == data
+
+    def test_lz77_decode_with_back_references(self):
+        data = b"abcabcabcabcabc"
+        encoded = lz77_encode(data)
+        decoded = lz77_decode(encoded)
+        assert decoded == data
+
+
+class TestLz77DecoderStub:
+    def test_lz77_decoder_stub_returns_bytes(self):
+        result = lz77_decoder_stub(100)
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+    def test_lz77_decoder_stub_small_size(self):
+        result = lz77_decoder_stub(10)
+        assert isinstance(result, bytes)
