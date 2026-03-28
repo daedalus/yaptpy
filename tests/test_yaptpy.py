@@ -10,6 +10,9 @@ from yaptpy import (
     call_preceded_obfuscation,
     egg_hunter,
     enhanced_polymorphic_engine,
+    generate_arm64_bind_shell,
+    generate_arm64_payload,
+    generate_arm64_reverse_shell,
     generate_bind_shell,
     generate_ipv6_reverse_shell,
     generate_parent_check,
@@ -730,3 +733,44 @@ def test_rc4_encrypt_invertible(data, key):
     encrypted = rc4_encrypt(data, key)
     decrypted = rc4_encrypt(encrypted, key)
     assert decrypted == data
+
+
+class TestArm64Payload:
+    @pytest.mark.skip(reason="ARM64 assembly requires cross-compilation setup")
+    def test_generate_arm64_reverse_shell_basic(self, sample_ip, sample_port):
+        result = generate_arm64_reverse_shell(sample_ip, sample_port)
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+    @pytest.mark.skip(reason="ARM64 assembly requires cross-compilation setup")
+    def test_generate_arm64_bind_shell_basic(self, sample_port):
+        result = generate_arm64_bind_shell(sample_port)
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+    @pytest.mark.skip(reason="ARM64 assembly requires cross-compilation setup")
+    def test_generate_arm64_payload_reverse(self, sample_ip, sample_port):
+        result = generate_arm64_payload(
+            ip=sample_ip,
+            port=sample_port,
+            payload_type="reverse",
+        )
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+    @pytest.mark.skip(reason="ARM64 assembly requires cross-compilation setup")
+    def test_generate_arm64_payload_bind(self, sample_port):
+        result = generate_arm64_payload(
+            port=sample_port,
+            payload_type="bind",
+        )
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+    def test_generate_arm64_payload_invalid(self):
+        with pytest.raises(ValueError, match="Invalid payload configuration"):
+            generate_arm64_payload(
+                ip=None,
+                port=None,
+                payload_type="reverse",
+            )

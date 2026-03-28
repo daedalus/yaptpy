@@ -1,16 +1,20 @@
 # SPEC.md — yaptpy
 
 ## Purpose
-YAPT (Yet Another Payload Tool) is a CLI tool that generates highly obfuscated x86_64 reverse shell shellcode with multiple evasion techniques including encryption, encoding, polymorphic junk insertion, and anti-debug/anti-emulation features.
+YAPT (Yet Another Payload Tool) is a CLI tool that generates highly obfuscated reverse shell shellcode for Linux with multiple evasion techniques including encryption, encoding, polymorphic junk insertion, and anti-debug/anti-emulation features.
 
 ## Scope
-- Generates x86_64 reverse shell shellcode for Linux
+- Generates x86_64 and ARM64 reverse shell shellcode for Linux
 - Supports TCP IPv4/IPv6 connections to attacker-controlled endpoints
 - Supports bind shells and DNS resolution payloads
 - Provides multiple obfuscation techniques (XOR, rolling XOR, RLE, Base64, Base32, AES, RC4)
 - Supports anti-debug (ptrace), anti-emulation (rdtsc/cpuid), VM detection, and parent process checks
 - Provides egg hunter, staged payloads, and advanced polymorphic obfuscation
 - CLI interface with argparse
+
+## Supported Architectures
+- x86_64 (amd64) - Default
+- ARM64 (aarch64) - With reverse shell and bind shell support
 
 ## Payload Types
 
@@ -144,10 +148,15 @@ YAPT (Yet Another Payload Tool) is a CLI tool that generates highly obfuscated x
 - `rle_decoder_stub(original_size: int) -> bytes` - RLE decoder stub
 - `rolling_xor_decoder_stub(original_size: int, start_key: int) -> bytes` - Rolling XOR decoder
 
+#### ARM64 Specific
+- `generate_arm64_reverse_shell(ip: str, port: int, executable_path: str) -> bytes` - Generate ARM64 reverse shell
+- `generate_arm64_bind_shell(port: int, bind_addr: str) -> bytes` - Generate ARM64 bind shell
+- `generate_arm64_payload(...) -> bytes` - Generate ARM64 payload with specified type
+
 ## Data Formats
-- Input: CLI arguments (IP, port, various boolean flags)
+- Input: CLI arguments (IP, port, architecture, various boolean flags)
 - Output: Raw shellcode bytes printed as `\xNN\xNN...` format
-- Shellcode format: x86_64 Linux syscall-based reverse/bind shell
+- Shellcode format: x86_64 or ARM64 Linux syscall-based reverse/bind shell
 
 ## Edge Cases
 1. Invalid IP address format - raises ValueError
@@ -164,9 +173,10 @@ YAPT (Yet Another Payload Tool) is a CLI tool that generates highly obfuscated x
 12. Empty or minimal payload generation
 13. Large payload sizes with RLE encoding
 14. Assembly errors during payload generation
+15. Unsupported features for ARM64 (egg hunter, staged, polymorphic) - CLI error
 
 ## Performance & Constraints
-- Target: x86_64 Linux only
+- Target: x86_64 or ARM64 Linux only
 - Python: 3.11+
 - Dependencies: pwntools, cryptography
 - No network I/O (local payload generation only)
