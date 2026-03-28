@@ -12,7 +12,7 @@ license = {text = "MIT"}
 authors = [
     {name = "Dario Clavijo", email = "clavijodario@gmail.com"}
 ]
-dependencies = ["pwntools"]
+dependencies = ["pwntools", "cryptography"]
 
 [project.optional-dependencies]
 dev = [
